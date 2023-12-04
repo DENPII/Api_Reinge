@@ -5,105 +5,80 @@ class UserController {
     private $_complement;
     private $_data;
 
-    // Constructor que inicializa las propiedades del controlador
+    // Constructor que inicializa las propiedades
     function __construct($method, $complement, $data) {
         $this->_method = $method;
         $this->_complement = $complement == null ? 0 : $complement;
         $this->_data = $data != 0 ? $data : "";
     }
 
-    // Método principal que gestiona las solicitudes según el método HTTP
+    // Método principal que maneja las solicitudes según el método HTTP
     public function index() {
         switch ($this->_method) {
             case "GET":
-                // Manejar solicitudes GET
-                $this->handleGET();
-                break;
+                // Obtener usuarios según el complemento
+                $user = $this->_complement == 0 ? UserModel::getUsers(0) : UserModel::getUsers($this->_complement);
+                $json = $user;
+                echo json_encode($json, true);
+                return;
+
             case 'POST':
-                // Manejar solicitudes POST
-                $this->handlePOST();
-                break;
+                // Crear un nuevo usuario con generación de salting
+                $createUser = UserModel::createUser($this->generateSalting());
+                $json = array(
+                    "response: " => $createUser
+                );
+                echo json_encode($json, true);
+                return;
+
             case "UPDATE":
-                // Manejar solicitudes UPDATE
-                $this->handleUPDATE();
-                break;
+                // Respuesta para la solicitud de actualización de usuario
+                $json = array(
+                    "response: " => "update de user"
+                );
+                echo json_encode($json, true);
+                return;
+
             case "DELETE":
-                // Manejar solicitudes DELETE
-                $this->handleDELETE();
-                break;
+                // Respuesta para la solicitud de eliminación de usuario
+                $json = array(
+                    "response: " => "delete de user"
+                );
+                echo json_encode($json, true);
+                return;
+
             default:
-                // Manejar solicitudes no encontradas
-                $this->handleNotFound();
-                break;
+                // Respuesta para cualquier otro método no reconocido
+                $json = array(
+                    "response: " => "not found"
+                );
+                echo json_encode($json, true);
+                return;
         }
     }
 
-    // Método para manejar solicitudes GET
-    private function handleGET() {
-        if ($this->_complement == 0) {
-            // Obtener todos los usuarios
-            $user = UserModel::getUsers(0);
-        } else {
-            // Obtener un usuario específico
-            $user = UserModel::getUsers($this->_complement);
-        }
-
-        // Enviar la respuesta en formato JSON
-        echo json_encode($user, true);
-    }
-
-    // Método para manejar solicitudes POST
-    private function handlePOST() {
-        // Crear un nuevo usuario con salting
-        $createUser = UserModel::createUser($this->generateSalting());
-
-        // Enviar la respuesta en formato JSON
-        $json = array("response" => $createUser);
-        echo json_encode($json, true);
-    }
-
-    // Método para manejar solicitudes UPDATE
-    private function handleUPDATE() {
-        // Enviar una respuesta de actualización de usuario en formato JSON
-        $json = array("response" => "update de user");
-        echo json_encode($json, true);
-    }
-
-    // Método para manejar solicitudes DELETE
-    private function handleDELETE() {
-        // Enviar una respuesta de eliminación de usuario en formato JSON
-        $json = array("response" => "delete de user");
-        echo json_encode($json, true);
-    }
-
-    // Método para manejar solicitudes no encontradas
-    private function handleNotFound() {
-        // Enviar una respuesta de no encontrado en formato JSON
-        $json = array("response" => "not found");
-        echo json_encode($json, true);
-    }
-
-    // Método privado para generar el salting de los datos
+    // Método privado para generar salting de contraseñas
     private function generateSalting() {
         $trimmedData = "";
 
-        // Verificar si los datos no están vacíos
+        // Verificar si hay datos y no están vacíos
         if (($this->_data != "") || (!empty($this->_data))) {
-            // Eliminar espacios en blanco de los datos
             $trimmedData = array_map('trim', $this->_data);
 
-            // Aplicar MD5 al campo de contraseña
+            // Hashear la contraseña con MD5
             $trimmedData['user_pss'] = md5($trimmedData['user_pss']);
 
-            // Generar el salting para credenciales
+            // Generar salting para credenciales
             $identifier = str_replace("$", "ue3", crypt($trimmedData["user_mail"], 'u56'));
             $key = str_replace("$", "ue2023", crypt($trimmedData["user_mail"], '65ue'));
 
-            // Actualizar las propiedades con salting
+            // Agregar salting a los datos del usuario
             $trimmedData['user_identifier'] = $identifier;
             $trimmedData['us_key'] = $key;
+
             return $trimmedData;
         }
     }
 }
+
 ?>
