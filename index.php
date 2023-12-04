@@ -1,48 +1,57 @@
 <?php
-require_once ("controller/routesController.php");
-require_once ("controller/userController.php");
-require_once ("controller/loginController.php");
-require_once ("model/userModel.php");
-//Instancia
-/*$my_object = new Connection();
-$my_object->hola;
-//Acceder a atributos estaticos
-var_export($my_object);
-$query = "SELECT * FROM users";
-$conectar = Connection::connecction()->prepare($query);
-var_dump($conectar);*/
+
+// Importar los controladores y modelos necesarios
+require_once("controller/routesController.php");
+require_once("controller/userController.php");
+require_once("controller/loginController.php");
+require_once("model/userModel.php");
+
+// Configuración de CORS
 header('Access-Control-Allow-Headers: Content-Type');
 header('Access-Control-Allow-Origin: *');
 header("Access-Control-Allow-Methods: GET, POST, PUT, DELETE");
 header("Allow: GET, POST, OPTIONS, PUT, DELETE");
 header('Access-Control-Allow-Headers: Authorization');
+
+// Obtener la ruta del URI
 $rutasArray = explode("/", $_SERVER['REQUEST_URI']);
 $endPoint = (array_filter($rutasArray)[2]);
-if($endPoint != 'login'){
-    if(isset($_SERVER['PHP_AUTH_USER']) && isset($_SERVER['PHP_AUTH_PW'])){
+
+// Verificar si el endpoint no es 'login'
+if ($endPoint != 'login') {
+    // Verificar si las credenciales están proporcionadas
+    if (isset($_SERVER['PHP_AUTH_USER']) && isset($_SERVER['PHP_AUTH_PW'])) {
         $ok = false;
         $identifier = $_SERVER['PHP_AUTH_USER'];
         $key = $_SERVER['PHP_AUTH_PW'];
+
+        // Obtener usuarios autenticados
         $users = UserModel::getUseAuth();
-        foreach($users as $u){
-            if($identifier.":".$key == $u["user_identifier"].":".$u["user_key"]){
+
+        // Verificar las credenciales del usuario
+        foreach ($users as $u) {
+            if ($identifier . ":" . $key == $u["user_identifier"] . ":" . $u["user_key"]) {
                 $ok = true;
             }
         }
-        if($ok){
+
+        // Verificar si las credenciales son correctas
+        if ($ok) {
             $routes = new RoutesController();
             $routes->index();
-        }else{
+        } else {
             $result["mensaje"] = "USTED NO TIENE ACCESO";
             echo json_encode($result, true);
             return false;
         }
-    }else{
+    } else {
+        // Credenciales no proporcionadas correctamente
         $result["mensaje"] = "ERROR EN CREDENCIALES 1";
         echo json_encode($result, true);
         return false;
     }
-}else{
+} else {
+    // Procesar el endpoint 'login'
     $routes = new RoutesController();
     $routes->index();
 }
